@@ -32,6 +32,26 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Audicob/PortalAcademico/Views/Coordinador/Crear.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29vcmRpbmFkb3JcQ3JlYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Audicob/PortalAcademico/Views/Coordinador/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29vcmRpbmFkb3JcRWRpdGFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Audicob/PortalAcademico/Views/Coordinador/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29vcmRpbmFkb3JcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Audicob/PortalAcademico/Views/Coordinador/Matriculas.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29vcmRpbmFkb3JcTWF0cmljdWxhcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Audicob/PortalAcademico/Views/Cursos/Detalle.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3Vyc29zXERldGFsbGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Audicob/PortalAcademico/Views/Cursos/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3Vyc29zXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

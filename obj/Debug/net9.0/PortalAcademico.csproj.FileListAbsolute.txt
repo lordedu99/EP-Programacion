@@ -296,3 +296,5 @@ D:\Audicob\PortalAcademico\obj\Debug\net9.0\refint\PortalAcademico.dll
 D:\Audicob\PortalAcademico\obj\Debug\net9.0\PortalAcademico.pdb
 D:\Audicob\PortalAcademico\obj\Debug\net9.0\PortalAcademico.genruntimeconfig.cache
 D:\Audicob\PortalAcademico\obj\Debug\net9.0\ref\PortalAcademico.dll
+D:\Audicob\PortalAcademico\bin\Debug\net9.0\Npgsql.dll
+D:\Audicob\PortalAcademico\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
