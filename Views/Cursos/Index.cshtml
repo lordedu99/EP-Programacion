@@ -1,0 +1,44 @@
+@model IEnumerable<PortalAcademico.Models.Curso>
+@{
+    ViewData["Title"] = "Catálogo de Cursos";
+}
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">@ViewData["Title"]</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var curso in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@curso.Nombre</h5>
+                        <p class="card-text mb-1"><strong>Código:</strong> @curso.Codigo</p>
+                        <p class="card-text mb-1"><strong>Créditos:</strong> @curso.Creditos</p>
+                        <p class="card-text mb-1"><strong>Cupo Máximo:</strong> @curso.CupoMaximo</p>
+                        <p class="card-text mb-3">
+                            <strong>Horario:</strong> 
+                            @curso.HorarioInicio.ToString(@"hh\:mm") - @curso.HorarioFin.ToString(@"hh\:mm")
+                        </p>
+                        <a asp-action="Matricular" asp-route-id="@curso.Id" class="btn btn-primary mt-auto">Inscribirse</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
