@@ -1,0 +1,45 @@
+@model PortalAcademico.Models.Curso
+@{
+    ViewData["Title"] = "Detalle del Curso";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">@ViewData["Title"]</h2>
+
+    @* Mensajes de error o éxito *@
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">@Model.Nombre</h4>
+            <p class="card-text"><strong>Código:</strong> @Model.Codigo</p>
+            <p class="card-text"><strong>Créditos:</strong> @Model.Creditos</p>
+            <p class="card-text"><strong>Cupo Máximo:</strong> @Model.CupoMaximo</p>
+            <p class="card-text">
+                <strong>Horario:</strong> 
+                @Model.HorarioInicio.ToString(@"hh\:mm") - @Model.HorarioFin.ToString(@"hh\:mm")
+            </p>
+            <p class="card-text">
+                <strong>Estado:</strong> @(Model.Activo ? "Activo" : "Inactivo")
+            </p>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary">Volver al catálogo</a>
+                <a asp-action="Matricular" asp-route-id="@Model.Id" class="btn btn-primary">Inscribirse</a>
+            </div>
+        </div>
+    </div>
+</div>

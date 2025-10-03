@@ -6,6 +6,7 @@
 <div class="container-fluid mt-4">
     <h2 class="mb-4">@ViewData["Title"]</h2>
 
+    @* Mensajes de error o éxito *@
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -21,6 +22,29 @@
         </div>
     }
 
+    @* FORMULARIO DE FILTROS *@
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-3">
+            <input type="text" name="nombre" value="@ViewData["FilterNombre"]" class="form-control" placeholder="Nombre">
+        </div>
+        <div class="col-md-2">
+            <input type="number" name="creditosMin" value="@ViewData["FilterCreditosMin"]" class="form-control" placeholder="Créditos min">
+        </div>
+        <div class="col-md-2">
+            <input type="number" name="creditosMax" value="@ViewData["FilterCreditosMax"]" class="form-control" placeholder="Créditos max">
+        </div>
+        <div class="col-md-2">
+            <input type="time" name="horarioInicio" value="@ViewData["FilterHorarioInicio"]" class="form-control">
+        </div>
+        <div class="col-md-2">
+            <input type="time" name="horarioFin" value="@ViewData["FilterHorarioFin"]" class="form-control">
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        </div>
+    </form>
+
+    @* TARJETAS DE CURSOS *@
     <div class="row row-cols-1 row-cols-md-3 g-4">
         @foreach (var curso in Model)
         {
@@ -35,7 +59,15 @@
                             <strong>Horario:</strong> 
                             @curso.HorarioInicio.ToString(@"hh\:mm") - @curso.HorarioFin.ToString(@"hh\:mm")
                         </p>
-                        <a asp-action="Matricular" asp-route-id="@curso.Id" class="btn btn-primary mt-auto">Inscribirse</a>
+
+                        <div class="mt-auto d-flex justify-content-between">
+                            <a asp-controller="Cursos" asp-action="Detalle" asp-route-id="@curso.Id" class="btn btn-outline-primary">
+                                Ver Detalle
+                            </a>
+                            <a asp-controller="Cursos" asp-action="Matricular" asp-route-id="@curso.Id" class="btn btn-primary">
+                                Inscribirse
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
