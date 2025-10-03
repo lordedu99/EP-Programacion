@@ -43,12 +43,15 @@
 
                         @* Enlace al último curso visitado *@
                         @{
-                            var ultimoCursoIdStr = HttpContextAccessor.HttpContext?.Session.GetString("UltimoCursoId");
-                            var ultimoCursoNombre = HttpContextAccessor.HttpContext?.Session.GetString("UltimoCursoNombre");
-                            int ultimoCursoId;
+                            int? ultimoCursoId = null;
+                            string? ultimoCursoNombre = null;
+                            if (HttpContextAccessor.HttpContext?.Session != null)
+                            {
+                                ultimoCursoId = HttpContextAccessor.HttpContext.Session.GetInt32("UltimoCursoId");
+                                ultimoCursoNombre = HttpContextAccessor.HttpContext.Session.GetString("UltimoCursoNombre");
+                            }
                         }
-                        @if (!string.IsNullOrEmpty(ultimoCursoIdStr) && !string.IsNullOrEmpty(ultimoCursoNombre)
-                             && int.TryParse(ultimoCursoIdStr, out ultimoCursoId))
+                        @if (ultimoCursoId.HasValue && !string.IsNullOrEmpty(ultimoCursoNombre))
                         {
                             <a class="btn btn-sm btn-outline-primary ms-3" 
                                asp-controller="Cursos" 

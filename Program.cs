@@ -4,46 +4,17 @@ using PortalAcademico.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// -------------------------------------------------
-// Base de datos
-// -------------------------------------------------
-var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection");
-
+// DbContext (SQLite o PostgreSQL, según tu entorno)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    // Si la cadena contiene "Host=" asumimos PostgreSQL (Render)
-    if (!string.IsNullOrEmpty(defaultConnection) && defaultConnection.Contains("Host="))
-        options.UseNpgsql(defaultConnection);
-    else
-        options.UseSqlite(defaultConnection ?? "Data Source=portal.db"); // fallback SQLite
-});
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// -------------------------------------------------
 // Identity
-// -------------------------------------------------
-builder.Services.AddDefaultIdentity<IdentityUser>(options =>
-    options.SignIn.RequireConfirmedAccount = false)
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// -------------------------------------------------
-// Cache + Sesiones (P4)
-// -------------------------------------------------
-if (builder.Environment.IsDevelopment())
-{
-    // 👉 En local usamos InMemory (no requiere Redis)
-    builder.Services.AddDistributedMemoryCache();
-}
-else
-{
-    // 👉 En producción (Render) usamos Redis
-    builder.Services.AddStackExchangeRedisCache(options =>
-    {
-        options.Configuration = builder.Configuration.GetConnectionString("Redis");
-        options.InstanceName = "PortalAcademico_";
-    });
-}
-
+// Session + cache
+builder.Services.AddDistributedMemoryCache(); // Para Redis: AddDistributedRedisCache
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -51,37 +22,47 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Necesario para acceder a Session en Layout
-builder.Services.AddHttpContextAccessor();
-
-// -------------------------------------------------
-// Controllers + Views
-// -------------------------------------------------
+// MVC + Razor Pages
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
+builder.Services.AddHttpContextAccessor(); // Necesario para acceder a sesión desde Layout
 
 var app = builder.Build();
 
-// -------------------------------------------------
-// Seed inicial (usuarios, roles, datos básicos)
-// -------------------------------------------------
+// Seed inicial: rol Coordinador y usuario de prueba
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    await SeedData.InitializeAsync(services);
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+
+    string[] roles = new[] { "Coordinador" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
+    }
+
+    var adminEmail = "coordinador@portal.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        adminUser = new IdentityUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
+        await userManager.CreateAsync(adminUser, "Password123!");
+        await userManager.AddToRoleAsync(adminUser, "Coordinador");
+    }
+
+    // SeedData opcional (ejemplo cursos)
+    await SeedData.InitializeAsync(scope.ServiceProvider);
 }
 
-// -------------------------------------------------
-// Middleware pipeline
-// -------------------------------------------------
+// Middleware
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseSession();
+app.UseSession(); // ⚠️ Muy importante: antes de MapControllerRoute
 
 app.MapControllerRoute(
     name: "default",
