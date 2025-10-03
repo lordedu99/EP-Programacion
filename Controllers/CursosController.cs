@@ -20,33 +20,9 @@ namespace PortalAcademico.Controllers
         }
 
         // GET: Cursos
-        public async Task<IActionResult> Index(string nombre, int? creditosMin, int? creditosMax, TimeSpan? horarioInicio, TimeSpan? horarioFin)
+        public async Task<IActionResult> Index()
         {
-            var query = _context.Cursos.Where(c => c.Activo).AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(nombre))
-                query = query.Where(c => c.Nombre.Contains(nombre));
-
-            if (creditosMin.HasValue)
-                query = query.Where(c => c.Creditos >= creditosMin.Value);
-
-            if (creditosMax.HasValue)
-                query = query.Where(c => c.Creditos <= creditosMax.Value);
-
-            if (horarioInicio.HasValue)
-                query = query.Where(c => c.HorarioInicio >= horarioInicio.Value);
-
-            if (horarioFin.HasValue)
-                query = query.Where(c => c.HorarioFin <= horarioFin.Value);
-
-            // Guardamos filtros para mostrarlos en la vista
-            ViewData["FilterNombre"] = nombre;
-            ViewData["FilterCreditosMin"] = creditosMin?.ToString();
-            ViewData["FilterCreditosMax"] = creditosMax?.ToString();
-            ViewData["FilterHorarioInicio"] = horarioInicio?.ToString(@"hh\:mm");
-            ViewData["FilterHorarioFin"] = horarioFin?.ToString(@"hh\:mm");
-
-            var cursos = await query.ToListAsync();
+            var cursos = await _context.Cursos.Where(c => c.Activo).ToListAsync();
             return View(cursos);
         }
 
@@ -55,39 +31,71 @@ namespace PortalAcademico.Controllers
         {
             var curso = await _context.Cursos.FindAsync(id);
             if (curso == null) return NotFound();
+
             return View(curso);
         }
 
-        // GET: Cursos/Matricular/5
+        // POST: Cursos/Matricular/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Matricular(int id)
         {
             var curso = await _context.Cursos.FindAsync(id);
             if (curso == null) return NotFound();
 
             var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                TempData["Error"] = "Debes iniciar sesión para matricularte.";
+                return RedirectToAction(nameof(Detalle), new { id });
+            }
 
-            // Validar que no se haya matriculado antes
-            var existe = await _context.Matriculas.AnyAsync(m => m.CursoId == id && m.UsuarioId == userId);
+            // Validar matrícula existente
+            var existe = await _context.Matriculas
+                .AnyAsync(m => m.CursoId == id && m.UsuarioId == userId);
             if (existe)
             {
                 TempData["Error"] = "Ya estás matriculado en este curso.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Detalle), new { id });
             }
 
             // Validar cupo
-            var cupoActual = await _context.Matriculas.CountAsync(m => m.CursoId == id && m.Estado == EstadoMatricula.Confirmada);
+            var cupoActual = await _context.Matriculas
+                .CountAsync(m => m.CursoId == id && m.Estado == EstadoMatricula.Confirmada);
             if (cupoActual >= curso.CupoMaximo)
             {
                 TempData["Error"] = "El cupo máximo de este curso ya fue alcanzado.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Detalle), new { id });
+            }
+
+            // Validar solapamiento horario
+            var matriculasUsuario = await _context.Matriculas
+                .Include(m => m.Curso)
+                .Where(m => m.UsuarioId == userId && m.Estado == EstadoMatricula.Confirmada)
+                .ToListAsync();
+
+            foreach (var m in matriculasUsuario)
+            {
+                if (!(curso.HorarioFin <= m.Curso.HorarioInicio || curso.HorarioInicio >= m.Curso.HorarioFin))
+                {
+                    TempData["Error"] = $"No puedes matricularte, hay solapamiento con el curso {m.Curso.Nombre}.";
+                    return RedirectToAction(nameof(Detalle), new { id });
+                }
             }
 
             // Crear matrícula pendiente
-            _context.Matriculas.Add(new Matricula { CursoId = id, UsuarioId = userId, Estado = EstadoMatricula.Pendiente });
+            var matricula = new Matricula
+            {
+                CursoId = id,
+                UsuarioId = userId,
+                Estado = EstadoMatricula.Pendiente
+            };
+
+            _context.Matriculas.Add(matricula);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Matrícula registrada correctamente.";
-            return RedirectToAction(nameof(Index));
+            TempData["Success"] = "Matrícula registrada correctamente en estado Pendiente.";
+            return RedirectToAction(nameof(Detalle), new { id });
         }
     }
 }

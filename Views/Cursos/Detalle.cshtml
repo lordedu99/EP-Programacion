@@ -6,7 +6,7 @@
 <div class="container mt-4">
     <h2 class="mb-4">@ViewData["Title"]</h2>
 
-    @* Mensajes de error o éxito *@
+    @* Mensajes de feedback *@
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -28,17 +28,17 @@
             <p class="card-text"><strong>Código:</strong> @Model.Codigo</p>
             <p class="card-text"><strong>Créditos:</strong> @Model.Creditos</p>
             <p class="card-text"><strong>Cupo Máximo:</strong> @Model.CupoMaximo</p>
-            <p class="card-text">
-                <strong>Horario:</strong> 
-                @Model.HorarioInicio.ToString(@"hh\:mm") - @Model.HorarioFin.ToString(@"hh\:mm")
-            </p>
-            <p class="card-text">
-                <strong>Estado:</strong> @(Model.Activo ? "Activo" : "Inactivo")
-            </p>
+            <p class="card-text"><strong>Horario:</strong> @Model.HorarioInicio.ToString(@"hh\:mm") - @Model.HorarioFin.ToString(@"hh\:mm")</p>
+            <p class="card-text"><strong>Estado:</strong> @(Model.Activo ? "Activo" : "Inactivo")</p>
 
             <div class="d-flex justify-content-between mt-4">
                 <a asp-action="Index" class="btn btn-secondary">Volver al catálogo</a>
-                <a asp-action="Matricular" asp-route-id="@Model.Id" class="btn btn-primary">Inscribirse</a>
+
+                @* FORMULARIO DE INSCRIPCIÓN *@
+                <form asp-action="Matricular" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-primary">Inscribirse</button>
+                </form>
             </div>
         </div>
     </div>

@@ -6,7 +6,7 @@
 <div class="container-fluid mt-4">
     <h2 class="mb-4">@ViewData["Title"]</h2>
 
-    @* Mensajes de error o éxito *@
+    @* Mensajes de feedback *@
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -25,19 +25,19 @@
     @* FORMULARIO DE FILTROS *@
     <form method="get" class="row g-3 mb-4">
         <div class="col-md-3">
-            <input type="text" name="nombre" value="@ViewData["FilterNombre"]" class="form-control" placeholder="Nombre">
+            <input type="text" name="nombre" value="@ViewData["nombre"]" class="form-control" placeholder="Nombre">
         </div>
         <div class="col-md-2">
-            <input type="number" name="creditosMin" value="@ViewData["FilterCreditosMin"]" class="form-control" placeholder="Créditos min">
+            <input type="number" name="creditosMin" value="@ViewData["creditosMin"]" class="form-control" placeholder="Créditos min">
         </div>
         <div class="col-md-2">
-            <input type="number" name="creditosMax" value="@ViewData["FilterCreditosMax"]" class="form-control" placeholder="Créditos max">
+            <input type="number" name="creditosMax" value="@ViewData["creditosMax"]" class="form-control" placeholder="Créditos max">
         </div>
         <div class="col-md-2">
-            <input type="time" name="horarioInicio" value="@ViewData["FilterHorarioInicio"]" class="form-control">
+            <input type="time" name="horarioInicio" value="@ViewData["horarioInicio"]" class="form-control">
         </div>
         <div class="col-md-2">
-            <input type="time" name="horarioFin" value="@ViewData["FilterHorarioFin"]" class="form-control">
+            <input type="time" name="horarioFin" value="@ViewData["horarioFin"]" class="form-control">
         </div>
         <div class="col-md-1">
             <button type="submit" class="btn btn-primary w-100">Filtrar</button>
@@ -56,18 +56,9 @@
                         <p class="card-text mb-1"><strong>Créditos:</strong> @curso.Creditos</p>
                         <p class="card-text mb-1"><strong>Cupo Máximo:</strong> @curso.CupoMaximo</p>
                         <p class="card-text mb-3">
-                            <strong>Horario:</strong> 
-                            @curso.HorarioInicio.ToString(@"hh\:mm") - @curso.HorarioFin.ToString(@"hh\:mm")
+                            <strong>Horario:</strong> @curso.HorarioInicio.ToString(@"hh\:mm") - @curso.HorarioFin.ToString(@"hh\:mm")
                         </p>
-
-                        <div class="mt-auto d-flex justify-content-between">
-                            <a asp-controller="Cursos" asp-action="Detalle" asp-route-id="@curso.Id" class="btn btn-outline-primary">
-                                Ver Detalle
-                            </a>
-                            <a asp-controller="Cursos" asp-action="Matricular" asp-route-id="@curso.Id" class="btn btn-primary">
-                                Inscribirse
-                            </a>
-                        </div>
+                        <a asp-action="Detalle" asp-route-id="@curso.Id" class="btn btn-info mt-auto">Ver detalle</a>
                     </div>
                 </div>
             </div>
