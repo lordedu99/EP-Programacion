@@ -4,23 +4,33 @@ using PortalAcademico.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- DbContext: PostgreSQL en Producción / cuando la cadena tiene Host=, si no SQLite ---
+// --- DbContext: PostgreSQL si la cadena tiene Host=; si no, SQLite. En Producción se exige Postgres ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    if (connectionString.Contains("Host=", StringComparison.OrdinalIgnoreCase) ||
-        builder.Environment.IsProduction())
+    bool looksLikePostgres = connectionString.Contains("Host=", StringComparison.OrdinalIgnoreCase);
+
+    if (builder.Environment.IsProduction())
     {
-        // Render / Postgres
+        if (!looksLikePostgres)
+            throw new InvalidOperationException(
+                "En Producción se espera una cadena de PostgreSQL en ConnectionStrings__DefaultConnection (debe incluir 'Host=').");
+
         options.UseNpgsql(connectionString);
-        // Evita issues de compatibilidad de timestamps con Npgsql
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
     }
     else
     {
-        // Local / SQLite
-        options.UseSqlite(connectionString);
+        if (looksLikePostgres)
+        {
+            options.UseNpgsql(connectionString);
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        }
+        else
+        {
+            options.UseSqlite(connectionString);
+        }
     }
 });
 
@@ -56,11 +66,9 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
-    // Aplica migraciones antes del seed (Postgres/SQLite según proveedor)
     var db = services.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
 
-    // Seed de roles/usuario
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
 
@@ -86,7 +94,7 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseSession(); // importante: antes de mapear rutas
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",
