@@ -10,18 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 // --- Configuración de conexiones ---
 var env = builder.Environment;
 var defaultConn = builder.Configuration.GetConnectionString("DefaultConnection");
-var sqliteConn = builder.Configuration.GetConnectionString("SQLiteConnection");
 
-// DB: PostgreSQL en producción, SQLite en desarrollo
+// DB: Solo PostgreSQL en producción
 if (env.IsProduction())
 {
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseNpgsql(defaultConn));
-}
-else
-{
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlite(sqliteConn));
+        options.UseNpgsql(defaultConn));  // PostgreSQL en producción
 }
 
 // Identity
