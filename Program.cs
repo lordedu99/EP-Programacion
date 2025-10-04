@@ -4,17 +4,40 @@ using PortalAcademico.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// DbContext (SQLite o PostgreSQL, según tu entorno)
+// --- DbContext: PostgreSQL en Producción / cuando la cadena tiene Host=, si no SQLite ---
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (connectionString.Contains("Host=", StringComparison.OrdinalIgnoreCase) ||
+        builder.Environment.IsProduction())
+    {
+        // Render / Postgres
+        options.UseNpgsql(connectionString);
+        // Evita issues de compatibilidad de timestamps con Npgsql
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+    }
+    else
+    {
+        // Local / SQLite
+        options.UseSqlite(connectionString);
+    }
+});
 
-// Identity
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+// --- Identity ---
+builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireDigit = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Session + cache
-builder.Services.AddDistributedMemoryCache(); // Para Redis: AddDistributedRedisCache
+// --- Session + Cache (sin Redis) ---
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -22,25 +45,27 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// MVC + Razor Pages
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-builder.Services.AddHttpContextAccessor(); // Necesario para acceder a sesión desde Layout
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// Seed inicial: rol Coordinador y usuario de prueba
+// --- Migraciones + Seed en arranque ---
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    var services = scope.ServiceProvider;
 
-    string[] roles = new[] { "Coordinador" };
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
-    }
+    // Aplica migraciones antes del seed (Postgres/SQLite según proveedor)
+    var db = services.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+
+    // Seed de roles/usuario
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+
+    if (!await roleManager.RoleExistsAsync("Coordinador"))
+        await roleManager.CreateAsync(new IdentityRole("Coordinador"));
 
     var adminEmail = "coordinador@portal.com";
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
@@ -51,18 +76,17 @@ using (var scope = app.Services.CreateScope())
         await userManager.AddToRoleAsync(adminUser, "Coordinador");
     }
 
-    // SeedData opcional (ejemplo cursos)
-    await SeedData.InitializeAsync(scope.ServiceProvider);
+    await SeedData.InitializeAsync(services);
 }
 
-// Middleware
+// --- Middleware ---
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseSession(); // ⚠️ Muy importante: antes de MapControllerRoute
+app.UseSession(); // importante: antes de mapear rutas
 
 app.MapControllerRoute(
     name: "default",
