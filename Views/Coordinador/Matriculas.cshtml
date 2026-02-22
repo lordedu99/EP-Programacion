@@ -1,0 +1,75 @@
+@model PortalAcademico.Models.Curso
+@{
+    ViewData["Title"] = "Matrículas del curso " + Model.Nombre;
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<table class="table table-striped table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Usuario</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Matriculas != null && Model.Matriculas.Any())
+        {
+            @foreach (var m in Model.Matriculas)
+            {
+                <tr>
+                    <td>@m.UsuarioId</td>
+                    <td>
+                        @switch(m.Estado)
+                        {
+                            case PortalAcademico.Models.EstadoMatricula.Pendiente:
+                                <span class="badge bg-warning text-dark">Pendiente</span>
+                                break;
+                            case PortalAcademico.Models.EstadoMatricula.Confirmada:
+                                <span class="badge bg-success">Confirmada</span>
+                                break;
+                            case PortalAcademico.Models.EstadoMatricula.Cancelada:
+                                <span class="badge bg-danger">Cancelada</span>
+                                break;
+                        }
+                    </td>
+                    <td>
+                        @if (m.Estado == PortalAcademico.Models.EstadoMatricula.Pendiente)
+                        {
+                            <a asp-action="Confirmar" asp-route-id="@m.Id" class="btn btn-success btn-sm">Confirmar</a>
+                            <a asp-action="Cancelar" asp-route-id="@m.Id" class="btn btn-danger btn-sm">Cancelar</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Sin acciones</span>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="3" class="text-center">No hay matrículas para este curso.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary mt-3">Volver al Panel</a>
