@@ -1,31 +1,37 @@
-using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using PortalAcademico.Models;
 
-namespace PortalAcademico.Controllers;
-
-public class HomeController : Controller
+namespace PortalAcademico.Controllers
 {
-    private readonly ILogger<HomeController> _logger;
-
-    public HomeController(ILogger<HomeController> logger)
+    public class HomeController : Controller
     {
-        _logger = logger;
-    }
+        private readonly UserManager<IdentityUser> _userManager;
 
-    public IActionResult Index()
-    {
-        return View();
-    }
+        public HomeController(UserManager<IdentityUser> userManager)
+        {
+            _userManager = userManager;
+        }
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+        public async Task<IActionResult> Index()
+        {
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null && await _userManager.IsInRoleAsync(user, "Coordinador"))
+                {
+                    // Redirige directamente al panel de coordinador
+                    return RedirectToAction("Index", "Coordinador");
+                }
+            }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            // Usuario normal o no autenticado ve la página normal de inicio
+            return View();
+        }
+
+        public IActionResult Privacy()
+        {
+            return View();
+        }
     }
 }

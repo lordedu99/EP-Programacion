@@ -1,0 +1,36 @@
+@model PortalAcademico.Models.Curso
+@{
+    ViewData["Title"] = "Matrículas del Curso: " + Model.Nombre;
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Usuario</th>
+            <th>Estado</th>
+            <th>Fecha de Registro</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var m in Model.Matriculas)
+        {
+            <tr>
+                <td>@m.Usuario.UserName</td>
+                <td>@m.Estado</td>
+                <td>@m.FechaRegistro.ToLocalTime()</td>
+                <td>
+                    @if (m.Estado == PortalAcademico.Models.EstadoMatricula.Pendiente)
+                    {
+                        <a asp-action="Confirmar" asp-route-id="@m.Id" class="btn btn-sm btn-success">Confirmar</a>
+                        <a asp-action="Cancelar" asp-route-id="@m.Id" class="btn btn-sm btn-danger">Cancelar</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary mt-3">Volver al Panel</a>

@@ -1,5 +1,5 @@
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PortalAcademico.Models
 {
@@ -11,11 +11,12 @@ namespace PortalAcademico.Models
 
         [Required]
         public int CursoId { get; set; }
-
         public Curso Curso { get; set; } = null!;
 
         [Required]
         public string UsuarioId { get; set; } = null!;
+
+        public IdentityUser Usuario { get; set; } = null!; // Navegación hacia IdentityUser
 
         public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
 
